@@ -21,7 +21,7 @@ Panel {
   readonly property bool useMph: String(setting("speedUnit", "km/h")).toLowerCase() === "mph"
   readonly property real displaySpeed: useMph ? Number(sample.speedKph || 0) * 0.621371 : Number(sample.speedKph || 0)
   readonly property string speedUnit: useMph ? "mph" : "km/h"
-  readonly property bool warning: sample.warning && String(sample.warning) !== "none"
+  readonly property bool warning: Boolean(sample.warning) && String(sample.warning) !== "none"
   readonly property string barLabel: "󰄋 " + Math.round(displaySpeed) + " " + (useMph ? "mph" : "km/h")
 
   function tooltipText() {
