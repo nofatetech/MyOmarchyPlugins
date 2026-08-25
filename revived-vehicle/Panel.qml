@@ -18,10 +18,15 @@ Panel {
   readonly property int refreshInterval: Math.max(250, Number(setting("refreshIntervalMs", 1000)))
   readonly property string dataSource: String(setting("dataSource", "simulation"))
   readonly property string telemetryFile: String(setting("telemetryFile", ""))
+  readonly property string vehicleProfile: String(setting("vehicleProfile", "honda-civic-1996-us"))
   readonly property bool useMph: String(setting("speedUnit", "km/h")).toLowerCase() === "mph"
   readonly property real displaySpeed: useMph ? Number(sample.speedKph || 0) * 0.621371 : Number(sample.speedKph || 0)
   readonly property string speedUnit: useMph ? "mph" : "km/h"
   readonly property bool warning: Boolean(sample.warning) && String(sample.warning) !== "none"
+  readonly property var profile: sample.profile || ({})
+  readonly property var transport: sample.transport || ({})
+  readonly property var obd: sample.obd || ({})
+  readonly property var signals: sample.signals || ({})
   readonly property string barLabel: "󰄋 " + Math.round(displaySpeed) + " " + speedUnit
 
   function tooltipText() {
@@ -35,7 +40,7 @@ Panel {
 
   function collectorCommand() {
     var script = Qt.resolvedUrl("adapters/telemetry.sh").toString().replace("file://", "")
-    return [script, "--source", dataSource, "--file", telemetryFile]
+    return [script, "--source", dataSource, "--file", telemetryFile, "--profile", vehicleProfile]
   }
 
   function refresh() {
@@ -116,10 +121,19 @@ Panel {
       onCloseRequested: root.close()
       onTabRequested: function(direction) { root.switchPanel(direction) }
 
-      Column {
-        id: dashboard
-        width: parent.width
-        spacing: Style.space(16)
+      Flickable {
+        id: dashboardScroll
+        anchors.fill: parent
+        contentWidth: width
+        contentHeight: dashboard.implicitHeight
+        clip: true
+        boundsBehavior: Flickable.StopAtBounds
+        interactive: contentHeight > height
+
+        Column {
+          id: dashboard
+          width: dashboardScroll.width
+          spacing: Style.space(16)
 
         Row {
           width: parent.width
@@ -228,6 +242,123 @@ Panel {
             font.bold: true
           }
         }
+
+        Rectangle {
+          width: parent.width
+          height: profileContent.implicitHeight + Style.space(24)
+          radius: Style.cornerRadius
+          color: Style.normalFillFor(root.bar.foreground, Color.accent, root.bar.urgent)
+
+          Column {
+            id: profileContent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: Style.space(12)
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(7)
+
+            SectionTitle { text: "VEHICLE PROFILE" }
+            InfoRow { label: "Profile"; value: String(root.profile.name || "Unspecified") }
+            InfoRow { label: "Generation"; value: String(root.profile.generation || "Unknown") }
+            InfoRow { label: "Region"; value: String(root.profile.region || "Unknown") }
+            InfoRow { label: "Engine / transmission"; value: String(root.profile.engine || "Unknown") + " / " + String(root.profile.transmission || "Unknown") }
+            InfoRow { label: "Connector"; value: String(root.profile.connector || "Unknown") }
+          }
+        }
+
+        Rectangle {
+          width: parent.width
+          height: networkContent.implicitHeight + Style.space(24)
+          radius: Style.cornerRadius
+          color: Style.normalFillFor(root.bar.foreground, Color.accent, root.bar.urgent)
+
+          Column {
+            id: networkContent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: Style.space(12)
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(7)
+
+            SectionTitle { text: "VEHICLE NETWORK" }
+            InfoRow { label: "Transport"; value: String(root.transport.kind || "unknown").toUpperCase() + " · " + String(root.transport.protocol || "not detected") }
+            InfoRow { label: "Interface"; value: String(root.transport.interface || "none") + " · " + String(root.transport.state || "offline") }
+            InfoRow { label: "Safety"; value: root.transport.readOnly === true ? "READ ONLY" : "WRITE CAPABLE"; urgent: root.transport.readOnly !== true }
+            InfoRow { label: "Traffic"; value: Math.round(Number(root.transport.rxRate || 0)) + " msg/s · " + Math.round(Number(root.transport.rxTotal || 0)).toLocaleString() + " total" }
+            InfoRow { label: "IDs / errors / dropped"; value: Math.round(Number(root.transport.uniqueIds || 0)) + " / " + Math.round(Number(root.transport.errorFrames || 0)) + " / " + Math.round(Number(root.transport.droppedFrames || 0)) }
+            InfoRow { label: "Bitrate / bus load"; value: root.transport.bitrateKbps === null || root.transport.bitrateKbps === undefined ? "n/a" : Number(root.transport.bitrateKbps).toFixed(1) + " kbps · " + (root.transport.busLoadPercent === null || root.transport.busLoadPercent === undefined ? "n/a" : Number(root.transport.busLoadPercent).toFixed(1) + "%") }
+            InfoRow { label: "Last frame"; value: String(root.transport.lastFrame || "—"); mono: true }
+          }
+        }
+
+        Rectangle {
+          width: parent.width
+          height: obdContent.implicitHeight + Style.space(24)
+          radius: Style.cornerRadius
+          color: Style.normalFillFor(root.bar.foreground, Color.accent, root.bar.urgent)
+
+          Column {
+            id: obdContent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: Style.space(12)
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(7)
+
+            SectionTitle { text: "OBD OVERVIEW" }
+            InfoRow { label: "Mode / ECU"; value: String(root.obd.mode || "unavailable") + " · " + String(root.obd.ecu || "none") }
+            InfoRow { label: "Ignition"; value: String(root.obd.ignition || "unknown") }
+            InfoRow { label: "Supported data / latency"; value: Math.round(Number(root.obd.supportedItems || 0)) + " items · " + Math.round(Number(root.obd.latencyMs || 0)) + " ms" }
+            InfoRow { label: "MIL / trouble codes"; value: (root.obd.mil === true ? "ON" : "off") + " · " + Math.round(Number(root.obd.dtcCount || 0)) + " DTCs"; urgent: root.obd.mil === true || Number(root.obd.dtcCount || 0) > 0 }
+            InfoRow { label: "Readiness"; value: String(root.obd.readiness || "unknown") }
+
+            Rectangle { width: parent.width; height: Style.spacing.hairline; color: root.bar.foreground; opacity: 0.1 }
+
+            Grid {
+              columns: 3
+              columnSpacing: Style.space(24)
+              rowSpacing: Style.space(12)
+              Metric { label: "STFT"; value: Number(root.signals.shortFuelTrimPercent || 0).toFixed(1) + "%" }
+              Metric { label: "INTAKE"; value: Math.round(Number(root.signals.intakeTemperatureC || 0)) + "°C" }
+              Metric { label: "THROTTLE"; value: Math.round(Number(root.signals.throttlePercent || 0)) + "%" }
+              Metric { label: "MAP"; value: Math.round(Number(root.signals.mapKpa || 0)) + " kPa" }
+              Metric { label: "FUEL"; value: Math.round(Number(root.signals.fuelLevelPercent || 0)) + "%" }
+            }
+          }
+        }
+
+        Rectangle {
+          width: parent.width
+          height: debugContent.implicitHeight + Style.space(24)
+          radius: Style.cornerRadius
+          color: Style.normalFillFor(root.bar.foreground, Color.accent, root.bar.urgent)
+
+          Column {
+            id: debugContent
+            anchors.left: parent.left
+            anchors.right: parent.right
+            anchors.margins: Style.space(12)
+            anchors.verticalCenter: parent.verticalCenter
+            spacing: Style.space(6)
+
+            SectionTitle { text: "OBD DEBUG · MOCK DATA" }
+
+            Repeater {
+              model: root.obd.debug || []
+
+              Text {
+                required property var modelData
+                width: debugContent.width
+                text: String(modelData)
+                color: Qt.darker(root.bar.foreground, 1.25)
+                font.family: "monospace"
+                font.pixelSize: Style.font.caption
+                elide: Text.ElideRight
+              }
+            }
+          }
+        }
+        }
       }
     }
   }
@@ -252,6 +383,42 @@ Panel {
       font.family: root.bar.fontFamily
       font.pixelSize: Style.font.title
       font.bold: true
+    }
+  }
+
+  component SectionTitle: Text {
+    color: Qt.darker(root.bar.foreground, 1.35)
+    font.family: root.bar.fontFamily
+    font.pixelSize: Style.font.caption
+    font.bold: true
+    font.letterSpacing: 1.4
+  }
+
+  component InfoRow: Row {
+    required property string label
+    required property string value
+    property bool urgent: false
+    property bool mono: false
+
+    width: parent.width
+    spacing: Style.space(10)
+
+    Text {
+      width: parent.width * 0.38
+      text: parent.label
+      color: Qt.darker(root.bar.foreground, 1.5)
+      font.family: root.bar.fontFamily
+      font.pixelSize: Style.font.bodySmall
+    }
+
+    Text {
+      width: parent.width * 0.62 - parent.spacing
+      text: parent.value
+      color: parent.urgent ? root.bar.urgent : root.bar.foreground
+      font.family: parent.mono ? "monospace" : root.bar.fontFamily
+      font.pixelSize: Style.font.bodySmall
+      horizontalAlignment: Text.AlignRight
+      elide: Text.ElideRight
     }
   }
 }

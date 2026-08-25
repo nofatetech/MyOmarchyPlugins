@@ -2,7 +2,7 @@
   "schemaVersion": 1,
   "id": "myomarchy.revived-vehicle",
   "name": "Revived Vehicle",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "author": "MyOmarchyPlugins",
   "license": "MIT",
   "description": "A minimal read-only dashboard for cars, motorcycles, scooters, and e-bikes",
@@ -20,13 +20,15 @@
       "refreshIntervalMs": 1000,
       "dataSource": "simulation",
       "telemetryFile": "",
-      "speedUnit": "km/h"
+      "speedUnit": "km/h",
+      "vehicleProfile": "honda-civic-1996-us"
     },
     "schema": [
       { "key": "refreshIntervalMs", "type": "integer", "label": "Refresh interval (milliseconds)", "min": 250, "max": 10000, "step": 250, "defaultValue": 1000 },
       { "key": "dataSource", "type": "string", "label": "Data source (simulation or file)", "defaultValue": "simulation" },
       { "key": "telemetryFile", "type": "string", "label": "Telemetry JSON file", "defaultValue": "" },
-      { "key": "speedUnit", "type": "string", "label": "Speed unit (km/h or mph)", "defaultValue": "km/h" }
+      { "key": "speedUnit", "type": "string", "label": "Speed unit (km/h or mph)", "defaultValue": "km/h" },
+      { "key": "vehicleProfile", "type": "string", "label": "Profile (honda-civic-1996-us or vw-golf-mk3-1996)", "defaultValue": "honda-civic-1996-us" }
     ]
   }
 }
