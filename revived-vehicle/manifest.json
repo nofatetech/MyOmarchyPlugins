@@ -1,0 +1,32 @@
+{
+  "schemaVersion": 1,
+  "id": "myomarchy.revived-vehicle",
+  "name": "Revived Vehicle",
+  "version": "0.1.0",
+  "author": "MyOmarchyPlugins",
+  "license": "MIT",
+  "description": "A minimal read-only dashboard for cars, motorcycles, scooters, and e-bikes",
+  "kinds": ["bar-widget"],
+  "entryPoints": {
+    "barWidget": "BarWidget.qml"
+  },
+  "barWidget": {
+    "displayName": "Revived Vehicle",
+    "description": "Glanceable speed, power, temperature, voltage, and warning telemetry",
+    "category": "Info",
+    "aliases": ["vehicle", "car", "motorcycle", "scooter", "bike", "obd", "canbus", "dashboard"],
+    "allowMultiple": false,
+    "defaults": {
+      "refreshIntervalMs": 1000,
+      "dataSource": "simulation",
+      "telemetryFile": "",
+      "speedUnit": "km/h"
+    },
+    "schema": [
+      { "key": "refreshIntervalMs", "type": "integer", "label": "Refresh interval (milliseconds)", "min": 250, "max": 10000, "step": 250, "defaultValue": 1000 },
+      { "key": "dataSource", "type": "string", "label": "Data source (simulation or file)", "defaultValue": "simulation" },
+      { "key": "telemetryFile", "type": "string", "label": "Telemetry JSON file", "defaultValue": "" },
+      { "key": "speedUnit", "type": "string", "label": "Speed unit (km/h or mph)", "defaultValue": "km/h" }
+    ]
+  }
+}
