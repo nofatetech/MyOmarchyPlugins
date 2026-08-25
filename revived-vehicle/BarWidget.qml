@@ -51,12 +51,12 @@ BarWidget {
     }
   }
 
-  BarIconButton {
+  WidgetButton {
     id: button
     anchors.fill: parent
     bar: root.bar
     text: panelLoader.item ? panelLoader.item.barLabel : "󰄋 --"
-    slotSize: Style.bar.statusSlot
+    horizontalMargin: 6
     tooltipText: panelLoader.item ? panelLoader.item.tooltipText() : "Vehicle telemetry"
     onPressed: root.togglePanel()
   }
