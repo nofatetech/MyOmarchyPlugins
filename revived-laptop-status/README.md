@@ -22,6 +22,8 @@ open `btop`; hover it for the full reading.
 - `refreshIntervalSec`: polling interval, from 2 to 60 seconds
 - `showFan`: include RPM in the bar when a fan sensor exists
 - `showMemory`: include RAM usage in the bar (off by default)
+- `minimumTemperatureC`: cool end of the dashboard gauge (35°C by default)
+- `maximumTemperatureC`: hot end of the dashboard gauge (100°C by default)
 - `temperatureWarningC`: switch to the urgent theme color at this temperature
 
 Fan RPM is hardware-dependent. Many laptops control the fan through firmware
