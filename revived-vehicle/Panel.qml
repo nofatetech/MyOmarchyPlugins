@@ -22,7 +22,7 @@ Panel {
   readonly property real displaySpeed: useMph ? Number(sample.speedKph || 0) * 0.621371 : Number(sample.speedKph || 0)
   readonly property string speedUnit: useMph ? "mph" : "km/h"
   readonly property bool warning: Boolean(sample.warning) && String(sample.warning) !== "none"
-  readonly property string barLabel: "󰄋 " + Math.round(displaySpeed)
+  readonly property string barLabel: "󰄋 " + Math.round(displaySpeed) + " " + speedUnit
 
   function tooltipText() {
     if (errorMessage) return "Vehicle telemetry unavailable: " + errorMessage
