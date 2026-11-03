@@ -10,12 +10,11 @@ packages and runs once every three seconds by default.
 ## Install
 
 ```bash
-omarchy plugin add https://github.com/OWNER/REPOSITORY --enable
+omarchy plugin add https://github.com/nofatetech/revived-laptop-status --enable
 omarchy bar move myomarchy.revived-laptop-status --section right
 ```
 
-Replace the example URL after publishing this repository. Click the widget to
-open `btop`; hover it for the full reading.
+Click the widget to open `btop`; hover it for the full reading.
 
 ## Settings
 
