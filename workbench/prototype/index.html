@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Workbench prototype</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <aside>
+    <div class="brand">🛠️ Workbench</div>
+    <button class="new-btn" id="newBtn">＋ New…</button>
+    <div id="nav"></div>
+    <div class="spacer"></div>
+    <div class="side-foot">
+      <button class="chip" id="sizeBtn">Aa Bigger</button>
+      <button class="chip" id="themeBtn">☀︎ Theme</button>
+    </div>
+  </aside>
+
+  <main id="view"></main>
+
+  <div class="overlay" id="step">
+    <div class="row between">
+      <div>
+        <div class="muted small" id="stepProject"></div>
+        <h2 id="stepHeading"></h2>
+      </div>
+      <div class="row">
+        <span class="voice">🎤 say “next step”</span>
+        <button class="btn ghost" id="stepClose">✕ Exit</button>
+      </div>
+    </div>
+    <div id="stepSafety"></div>
+    <div class="step-body" id="stepBody"></div>
+    <div class="bar" style="margin:1rem 0"><i id="stepBar" style="width:0"></i></div>
+    <div class="step-nav">
+      <button class="btn ghost" id="stepPrev">← Back</button>
+      <button class="btn ghost" id="stepPhoto">📷 Photo to log</button>
+      <button class="btn" id="stepNext">Next →</button>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+  <script src="data.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
