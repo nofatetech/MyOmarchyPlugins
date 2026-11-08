@@ -15,6 +15,12 @@ Item {
   property var templates: []
   property var projects: []
   property string lastMessage: ""
+  // The template the kid just picked, waiting for a name. null = not asking.
+  property var pendingTemplate: null
+  property string suggestedName: ""
+
+  readonly property var adjectives: ["brave", "sunny", "quick", "clever", "wild", "cosmic", "tiny", "mighty", "happy", "lucky"]
+  readonly property var nouns: ["fox", "rocket", "otter", "comet", "badger", "robot", "dragon", "owl", "panda", "falcon"]
 
   readonly property string pluginDir: Qt.resolvedUrl(".").toString().replace("file://", "")
 
@@ -23,17 +29,42 @@ Item {
     if (expanded) refresh()
   }
   function open() { expanded = true; refresh() }
-  function close() { expanded = false }
+  function close() { expanded = false; pendingTemplate = null }
+
+  function randomName() {
+    var a = adjectives[Math.floor(Math.random() * adjectives.length)]
+    var n = nouns[Math.floor(Math.random() * nouns.length)]
+    return a + " " + n
+  }
+
+  // Step 1: a tile was clicked. Ask for a name, pre-filled with a suggestion.
+  function ask(template) {
+    suggestedName = randomName()
+    pendingTemplate = template
+  }
+  function askById(id) {
+    for (var i = 0; i < templates.length; i++) {
+      if (templates[i].id === id) { expanded = true; ask(templates[i]); return }
+    }
+  }
+  function cancel() { pendingTemplate = null }
+  // Step 2: the name was confirmed.
+  function confirm(name) {
+    if (!pendingTemplate) return
+    var id = pendingTemplate.id
+    pendingTemplate = null
+    startNew(id, name)
+  }
 
   function refresh() {
     if (!tplProc.running) tplProc.running = true
     if (!projProc.running) projProc.running = true
   }
 
-  function startNew(templateId) {
+  function startNew(templateId, name) {
     if (newProc.running) return
     lastMessage = "Starting…"
-    newProc.command = [pluginDir + "scripts/new-project.sh", templateId]
+    newProc.command = [pluginDir + "scripts/new-project.sh", templateId, name || ""]
     newProc.running = true
   }
 
@@ -54,6 +85,8 @@ Item {
     function toggle(): void { root.toggle() }
     function open(): void { root.open() }
     function close(): void { root.close() }
+    // omarchy-shell myomarchy.kids-workbench create godot-game
+    function create(templateId: string): void { root.askById(templateId) }
   }
 
   Process {
