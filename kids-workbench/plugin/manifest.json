@@ -1,0 +1,11 @@
+{
+  "schemaVersion": 1,
+  "id": "myomarchy.kids-workbench",
+  "name": "Kids Workbench",
+  "version": "0.1.0",
+  "author": "MyOmarchyPlugins",
+  "license": "MIT",
+  "description": "A sidebar for kids: start something new in one click, and find what you made",
+  "kinds": ["service"],
+  "entryPoints": { "service": "Service.qml" }
+}

@@ -1,0 +1,9 @@
+{
+  "name": "HTML game",
+  "icon": "🕹️",
+  "description": "A tiny game in the browser. Edit game.js, then refresh the page (F5).",
+  "launch": [
+    "omarchy-launch-editor \"{dir}/game.js\"",
+    "chromium --new-window \"file://{dir}/index.html\""
+  ]
+}

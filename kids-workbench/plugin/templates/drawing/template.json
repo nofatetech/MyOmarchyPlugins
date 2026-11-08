@@ -1,0 +1,6 @@
+{
+  "name": "Drawing",
+  "icon": "🎨",
+  "description": "A blank white page to draw on.",
+  "launch": ["pinta \"{dir}/drawing.png\""]
+}

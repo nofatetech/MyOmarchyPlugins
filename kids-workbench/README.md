@@ -27,6 +27,23 @@ Started as an experiment for our own kids.
 | [docs/roadmap.md](docs/roadmap.md) | Suggested v1 and later phases |
 | [docs/open-questions.md](docs/open-questions.md) | What we haven't decided |
 
+## Try it (Omarchy shell plugin)
+
+```bash
+./install.sh      # symlinks plugin/ into ~/.config/omarchy/plugins and enables it
+omarchy-shell myomarchy.kids-workbench toggle   # or: open / close
+./uninstall.sh
+```
+
+A thin strip on the left edge; click it and it widens to **New** (templates) and **My stuff** (projects).
+Clicking a template creates `~/Projects/<fun-name>/` from the template and opens the right app on it.
+Set `KIDS_WORKBENCH_PROJECTS` to use another folder.
+
+**Templates** are plain folders: `plugin/templates/<id>/template.json` (name, icon, `launch` commands with `{dir}`) plus a `starter/` folder copied into the new project.
+Add your own in `~/.config/kids-workbench/templates/<id>/`.
+
+The HTML in `prototype/` is the original design sketch, not the real thing.
+
 ## Status
 
-Brainstorming. Nothing built yet.
+Sidebar v0.1: New and My stuff, three templates (HTML game, Godot game, Drawing). Next: project name prompt, step mode, link saver.

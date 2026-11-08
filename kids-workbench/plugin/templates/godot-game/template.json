@@ -1,0 +1,6 @@
+{
+  "name": "Godot game",
+  "icon": "🎮",
+  "description": "A 2D game in the Godot editor with a moving player to start from.",
+  "launch": ["godot --editor --path \"{dir}\""]
+}
