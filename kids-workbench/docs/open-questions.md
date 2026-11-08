@@ -23,6 +23,6 @@
 - Power and network in the garage/treehouse.
 
 ## Technical
-- Name of the project.
+- ~~Name of the project~~ (decided: Kids Workbench).
 - Qt app vs local web app for the hub and link saver.
 - Sync and sharing approach (Syncthing, local Git, something else).

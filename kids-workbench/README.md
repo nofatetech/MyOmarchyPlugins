@@ -1,4 +1,4 @@
-# Workbench (working title)
+# Kids Workbench
 
 A kid-friendly maker environment built on [Omarchy](https://omarchy.org) (Arch + Hyprland), for kids roughly 8–16.
 Started as an experiment for our own kids.
