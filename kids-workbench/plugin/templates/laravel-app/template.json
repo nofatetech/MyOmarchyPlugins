@@ -1,0 +1,11 @@
+{
+  "name": "Web app",
+  "icon": "🌐",
+  "description": "A real web app with Laravel and Vue. An agent helps you build it, step by step.",
+  "asksIdea": true,
+  "agent": {
+    "prompt": "Read AGENTS.md and BRIEF.md, then say hi using my profile if there is one. Run .kids-workbench/scripts/doctor.sh, then scripts/bootstrap.sh, and propose a small first milestone for PLAN.md.",
+    "resume": "Welcome back. Read PLAN.md and BRIEF.md, tell me where we are in two or three lines, and suggest the next small step."
+  },
+  "launch": []
+}

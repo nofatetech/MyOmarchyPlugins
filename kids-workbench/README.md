@@ -26,6 +26,7 @@ Started as an experiment for our own kids.
 | [docs/safety.md](docs/safety.md) | Safety layer and guardrails |
 | [docs/omarchy-integration.md](docs/omarchy-integration.md) | How it could be built on Omarchy |
 | [docs/roadmap.md](docs/roadmap.md) | Suggested v1 and later phases |
+| [standards/](standards/) | Versioned standards: architecture, conventions, guardrails, testing, naming |
 | [standards/naming.md](standards/naming.md) | Naming rules for hosts, folders, DBs, env vars, code |
 | [docs/open-questions.md](docs/open-questions.md) | What we haven't decided |
 
@@ -44,8 +45,17 @@ Set `KIDS_WORKBENCH_PROJECTS` to use another folder.
 **Templates** are plain folders: `plugin/templates/<id>/template.json` (name, icon, `launch` commands with `{dir}`) plus a `starter/` folder copied into the new project.
 Add your own in `~/.config/kids-workbench/templates/<id>/`.
 
+Templates can also start an **agent**: the **Web app** template creates a folder with `AGENTS.md`, `BRIEF.md`, `PLAN.md`,
+a managed `.kids-workbench/` folder (standards, guard tests, scripts) and opens Claude Code (or `KIDS_WORKBENCH_AGENT`) there.
+When the central `standards/` version moves, projects show a **⬆ update** badge in My stuff and the agent migrates them.
+See [docs/agents-and-standards.md](docs/agents-and-standards.md).
+
 The HTML in `prototype/` is the original design sketch, not the real thing.
 
 ## Status
 
-Sidebar v0.1: New and My stuff, three templates (HTML game, Godot game, Drawing). Next: project name prompt, step mode, link saver.
+Sidebar v0.1: name prompt (plus optional idea), My stuff with update badges, four templates (HTML game, Godot game, Drawing, Web app).
+Standards v0.1.0 (naming, architecture, conventions, guardrails, testing).
+
+**Not yet tested:** `scripts/bootstrap.sh` in the Web app seed (this machine has no PHP/Composer yet), and the guard tests, which need a bootstrapped Laravel app.
+Next: Caddy + shared services setup, `kids-workbench doctor` install help, step mode, link saver.

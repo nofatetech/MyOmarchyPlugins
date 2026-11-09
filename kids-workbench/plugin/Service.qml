@@ -49,11 +49,11 @@ Item {
   }
   function cancel() { pendingTemplate = null }
   // Step 2: the name was confirmed.
-  function confirm(name) {
+  function confirm(name, idea) {
     if (!pendingTemplate) return
     var id = pendingTemplate.id
     pendingTemplate = null
-    startNew(id, name)
+    startNew(id, name, idea)
   }
 
   function refresh() {
@@ -61,15 +61,22 @@ Item {
     if (!projProc.running) projProc.running = true
   }
 
-  function startNew(templateId, name) {
+  function startNew(templateId, name, idea) {
     if (newProc.running) return
     lastMessage = "Starting…"
-    newProc.command = [pluginDir + "scripts/new-project.sh", templateId, name || ""]
+    newProc.command = [pluginDir + "scripts/new-project.sh", templateId, name || "", idea || ""]
     newProc.running = true
   }
 
   function openProject(path) {
     openProc.command = [pluginDir + "scripts/open-project.sh", path]
+    openProc.running = true
+  }
+
+  // The project's standards are older than the current ones: update, then the agent migrates.
+  function syncProject(path) {
+    lastMessage = "Updating…"
+    openProc.command = [pluginDir + "scripts/sync-launch.sh", path]
     openProc.running = true
   }
 

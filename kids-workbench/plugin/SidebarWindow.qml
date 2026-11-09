@@ -14,6 +14,7 @@ PanelWindow {
   readonly property int panelWidth: Math.round(360 * Style.fontScale)
   readonly property int pad: Style.spacing.md
   readonly property bool asking: !!host && host.pendingTemplate !== null
+  readonly property bool askIdea: asking && host.pendingTemplate.asksIdea === true
 
   color: "transparent"
   WlrLayershell.namespace: "kids-workbench"
@@ -129,6 +130,7 @@ PanelWindow {
 
           onVisibleChanged: if (visible) {
             nameInput.text = win.host.suggestedName
+            ideaInput.text = ""
             nameInput.forceActiveFocus()
             nameInput.selectAll()
           }
@@ -169,7 +171,36 @@ PanelWindow {
                 color: Color.popups.text
                 selectByMouse: true
                 clip: true
-                onAccepted: win.host.confirm(text)
+                onAccepted: win.askIdea ? ideaInput.forceActiveFocus() : win.host.confirm(text, "")
+                Keys.onEscapePressed: win.host.cancel()
+              }
+            }
+            Text {
+              visible: win.askIdea
+              text: "What do you want to make? (optional)"
+              font.pixelSize: Math.round(13 * Style.fontScale)
+              color: Color.popups.text
+              opacity: 0.7
+            }
+            Rectangle {
+              visible: win.askIdea
+              width: parent.width
+              height: Math.round(40 * Style.fontScale)
+              radius: 10
+              color: Qt.rgba(1, 1, 1, 0.1)
+              border.width: ideaInput.activeFocus ? 2 : 0
+              border.color: Color.accent
+              TextInput {
+                id: ideaInput
+                anchors.fill: parent
+                anchors.leftMargin: 12
+                anchors.rightMargin: 12
+                verticalAlignment: TextInput.AlignVCenter
+                font.pixelSize: Math.round(15 * Style.fontScale)
+                color: Color.popups.text
+                selectByMouse: true
+                clip: true
+                onAccepted: win.host.confirm(nameInput.text, text)
                 Keys.onEscapePressed: win.host.cancel()
               }
             }
@@ -181,7 +212,7 @@ PanelWindow {
                 radius: 10
                 color: Color.accent
                 Text { anchors.centerIn: parent; text: "Create"; font.bold: true; color: "#11131f"; font.pixelSize: Math.round(14 * Style.fontScale) }
-                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: win.host.confirm(nameInput.text) }
+                MouseArea { anchors.fill: parent; cursorShape: Qt.PointingHandCursor; onClicked: win.host.confirm(nameInput.text, ideaInput.text) }
               }
               Rectangle {
                 width: Math.round(90 * Style.fontScale)
@@ -304,6 +335,30 @@ PanelWindow {
               onClicked: (mouse) => {
                 if (mouse.button === Qt.RightButton) win.host.openFolder(modelData.path)
                 else { win.host.openProject(modelData.path); win.host.close() }
+              }
+            }
+            // Standards are newer than this project: one click to update with the agent.
+            Rectangle {
+              visible: modelData.outdated === true
+              anchors.right: parent.right
+              anchors.rightMargin: Style.spacing.sm
+              anchors.verticalCenter: parent.verticalCenter
+              width: updateLabel.implicitWidth + 16
+              height: Math.round(26 * Style.fontScale)
+              radius: 13
+              color: Color.accent
+              Text {
+                id: updateLabel
+                anchors.centerIn: parent
+                text: "⬆ update"
+                font.pixelSize: Math.round(12 * Style.fontScale)
+                font.bold: true
+                color: "#11131f"
+              }
+              MouseArea {
+                anchors.fill: parent
+                cursorShape: Qt.PointingHandCursor
+                onClicked: { win.host.syncProject(modelData.path); win.host.close() }
               }
             }
           }

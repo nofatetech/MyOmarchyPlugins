@@ -1,0 +1,33 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php artisan:*)",
+      "Bash(composer install:*)",
+      "Bash(composer require:*)",
+      "Bash(npm install:*)",
+      "Bash(npm run:*)",
+      "Bash(./vendor/bin/pest:*)",
+      "Bash(./vendor/bin/pint:*)",
+      "Bash(./scripts/*)",
+      "Bash(scripts/*)",
+      "Bash(.kids-workbench/scripts/*)",
+      "Bash(git status:*)",
+      "Bash(git diff:*)",
+      "Bash(git log:*)",
+      "Bash(git add:*)",
+      "Bash(git commit:*)"
+    ],
+    "ask": [
+      "Bash(git push:*)",
+      "Bash(php artisan migrate:fresh:*)",
+      "Bash(php artisan db:wipe:*)"
+    ],
+    "deny": [
+      "Bash(sudo:*)",
+      "Bash(rm -rf /*)",
+      "Bash(rm -rf ~*)",
+      "Read(./.env)",
+      "Edit(./.kids-workbench/**)"
+    ]
+  }
+}
