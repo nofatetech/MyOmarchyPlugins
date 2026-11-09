@@ -16,6 +16,8 @@ fi
 # Folder name: lowercase, letters/digits/_/-, everything else becomes a dash.
 base="$(printf '%s' "$name" | tr '[:upper:]' '[:lower:]' | sed -E 's/[^[:alnum:]_-]+/-/g; s/^-+//; s/-+$//')"
 [ -n "$base" ] || base="project"
+# These names are taken by the shared tools (db.<domain>, mail.<domain>, ...).
+case "$base" in db|mail|www|api|admin) base="$base-app" ;; esac
 mkdir -p "$PROJECTS_DIR"
 dir="$PROJECTS_DIR/$base"; n=2
 while [ -e "$dir" ]; do dir="$PROJECTS_DIR/$base-$n"; n=$((n+1)); done

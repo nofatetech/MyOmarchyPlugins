@@ -16,9 +16,24 @@ form the context allows:
 - Landing page / project list: `kids-workbench.localhost`.
 - Database viewer: `db.kids-workbench.localhost`.
 - Mail catcher: `mail.kids-workbench.localhost`.
+- Reserved slugs (taken by the shared tools): `db`, `mail`, `www`, `api`, `admin`. A project with one of
+  these names gets `-app` added.
 - `<name>` is the project slug: lowercase letters, digits and `-`, at most 63 characters.
   It is the same slug as the project's folder name.
 - `*.localhost` resolves to the local machine without any DNS setup.
+
+## Shared services (what projects can use)
+All on `127.0.0.1`, started with `kids-workbench up`:
+
+| Service | Address | Used for |
+|---|---|---|
+| Caddy | `http://<name>.kids-workbench.localhost/` | serves `~/Projects/<name>`: `public/index.php` through php-fpm, anything else as static files |
+| Postgres | `127.0.0.1:54329` | opt-in per project: `kids-workbench db create <name>` prints the `DB_*` and `MAIL_*` env lines |
+| Mailpit | SMTP `127.0.0.1:1025`, UI `http://mail.kids-workbench.localhost/` | catches all outgoing mail |
+| Adminer | `http://db.kids-workbench.localhost/` | browse Postgres and SQLite files |
+
+Custom routing for one project (a dev-server proxy, a different root): a snippet in
+`~/.config/kids-workbench/caddy.d/<name>.caddy`, then `kids-workbench reload`.
 
 ## Folders
 - Plugin config and user templates: `~/.config/kids-workbench/`

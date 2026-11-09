@@ -7,7 +7,9 @@ One Laravel app per project. Keep it small and boring.
   No React. Do not swap the frontend framework.
 - **SQLite** by default (a file in `database/`). Postgres is opt-in and shared (see naming.md).
 - **Pest** for tests, **Pint** for code style.
-- Everything runs locally. Hosted at `<name>.kids-workbench.localhost` through the central Caddy (when set up).
+- Everything runs locally. The app is served at `<name>.kids-workbench.localhost` by the shared Caddy and php-fpm:
+  no per-project web server and no port to pick. Mail goes to Mailpit (`127.0.0.1:1025`), and the optional
+  Postgres is shared (`kids-workbench db create <name>`). See naming.md for the addresses.
 
 ## Layers
 1. **Browser:** Inertia pages in `resources/js/pages/<Feature>/`, shared components in `resources/js/components/`.

@@ -338,27 +338,48 @@ PanelWindow {
               }
             }
             // Standards are newer than this project: one click to update with the agent.
-            Rectangle {
-              visible: modelData.outdated === true
+            Row {
               anchors.right: parent.right
               anchors.rightMargin: Style.spacing.sm
               anchors.verticalCenter: parent.verticalCenter
-              width: updateLabel.implicitWidth + 16
-              height: Math.round(26 * Style.fontScale)
-              radius: 13
-              color: Color.accent
-              Text {
-                id: updateLabel
-                anchors.centerIn: parent
-                text: "⬆ update"
-                font.pixelSize: Math.round(12 * Style.fontScale)
-                font.bold: true
-                color: "#11131f"
+              spacing: Style.spacing.xs
+
+              Rectangle {
+                visible: modelData.outdated === true
+                width: updateLabel.implicitWidth + 16
+                height: Math.round(26 * Style.fontScale)
+                radius: 13
+                color: Color.accent
+                Text {
+                  id: updateLabel
+                  anchors.centerIn: parent
+                  text: "⬆ update"
+                  font.pixelSize: Math.round(12 * Style.fontScale)
+                  font.bold: true
+                  color: "#11131f"
+                }
+                MouseArea {
+                  anchors.fill: parent
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: { win.host.syncProject(modelData.path); win.host.close() }
+                }
               }
-              MouseArea {
-                anchors.fill: parent
-                cursorShape: Qt.PointingHandCursor
-                onClicked: { win.host.syncProject(modelData.path); win.host.close() }
+
+              // Open the project's site in the browser.
+              Rectangle {
+                visible: modelData.web === true
+                width: Math.round(30 * Style.fontScale)
+                height: width
+                radius: width / 2
+                color: webMouse.containsMouse ? Style.hoverFill : Qt.rgba(1, 1, 1, 0.08)
+                Text { anchors.centerIn: parent; text: "🌐"; font.pixelSize: Math.round(15 * Style.fontScale) }
+                MouseArea {
+                  id: webMouse
+                  anchors.fill: parent
+                  hoverEnabled: true
+                  cursorShape: Qt.PointingHandCursor
+                  onClicked: win.host.openSite(modelData.path)
+                }
               }
             }
           }

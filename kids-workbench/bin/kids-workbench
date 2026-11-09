@@ -1,0 +1,212 @@
+#!/usr/bin/env bash
+# kids-workbench: manage the shared services (Caddy, Postgres, Mailpit, Adminer, PHP-FPM).
+# Names follow standards/naming.md. Everything listens on 127.0.0.1 only.
+set -euo pipefail
+
+ROOT="$(cd "$(dirname "$(readlink -f "${BASH_SOURCE[0]}")")/.." && pwd -P)"
+SRC="$ROOT/services"
+CONFIG="${XDG_CONFIG_HOME:-$HOME/.config}/kids-workbench"
+SVC="${XDG_DATA_HOME:-$HOME/.local/share}/kids-workbench/services"
+RUN="${XDG_RUNTIME_DIR:-/run/user/$(id -u)}/kids-workbench"
+PROJECTS="${KIDS_WORKBENCH_PROJECTS:-$HOME/Projects}"
+DOMAIN="kids-workbench.localhost"
+PG_PORT="${KIDS_WORKBENCH_PG_PORT:-54329}"
+PG="kids-workbench-postgres"
+UNIT="kids-workbench-php-fpm.service"
+
+say() { printf '%s\n' "$*"; }
+die() { printf 'Error: %s\n' "$*" >&2; exit 1; }
+have() { command -v "$1" >/dev/null 2>&1; }
+
+compose() { docker compose --project-directory "$SVC" --env-file "$SVC/.env" -f "$SVC/compose.yaml" "$@"; }
+
+# Copy service files to the data dir and render .env (keeps the Postgres password once made).
+sync_files() {
+  mkdir -p "$SVC" "$CONFIG/caddy.d" "$RUN" "$PROJECTS" "$SVC/adminer/plugins-enabled" "$SVC/db"
+  cp "$SRC/compose.yaml" "$SRC/Caddyfile" "$SRC/browse.html" "$SVC/"
+  cp "$SRC"/adminer/plugins-enabled/* "$SVC/adminer/plugins-enabled/" 2>/dev/null || true
+  local pw=""
+  [ -f "$SVC/.env" ] && pw="$(sed -n 's/^KIDS_WORKBENCH_PG_PASSWORD=//p' "$SVC/.env")"
+  [ -n "$pw" ] || pw="$(head -c 24 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 24)"
+  # Host label index of the project name: <name>.kids-workbench.localhost -> labels are
+  # [localhost, kids-workbench, <name>] counted from the right, so <name> is index 2.
+  local label=$(( $(tr -cd '.' <<<"$DOMAIN" | wc -c) + 1 ))
+  umask 077
+  cat > "$SVC/.env" <<EOF
+KIDS_WORKBENCH_DOMAIN=$DOMAIN
+KIDS_WORKBENCH_PROJECTS=$PROJECTS
+KIDS_WORKBENCH_CONFIG=$CONFIG
+KIDS_WORKBENCH_RUN=$RUN
+KIDS_WORKBENCH_LABEL=$label
+KIDS_WORKBENCH_PG_PORT=$PG_PORT
+KIDS_WORKBENCH_PG_PASSWORD=$pw
+KIDS_WORKBENCH_UID=$(id -u)
+KIDS_WORKBENCH_GID=$(id -g)
+EOF
+}
+
+render_php_fpm() {
+  mkdir -p "$CONFIG" "$RUN" "$HOME/.config/systemd/user"
+  cat > "$CONFIG/php-fpm.conf" <<EOF
+; Kids Workbench PHP-FPM (runs as you, listens on a socket only Caddy reaches)
+[global]
+pid = $RUN/php-fpm.pid
+error_log = /dev/stderr
+daemonize = no
+
+[www]
+listen = $RUN/php-fpm.sock
+listen.mode = 0660
+pm = ondemand
+pm.max_children = 8
+pm.process_idle_timeout = 20s
+catch_workers_output = yes
+clear_env = no
+php_admin_value[memory_limit] = 256M
+EOF
+  cat > "$HOME/.config/systemd/user/$UNIT" <<EOF
+[Unit]
+Description=Kids Workbench PHP-FPM
+
+[Service]
+ExecStart=$(command -v php-fpm) --nodaemonize --fpm-config $CONFIG/php-fpm.conf
+Restart=on-failure
+
+[Install]
+WantedBy=default.target
+EOF
+}
+
+cmd_install_host() {
+  say "This installs PHP, php-fpm and Composer with pacman (asks for your sudo password)."
+  sudo pacman -S --needed php php-fpm php-sqlite php-pgsql php-intl php-gd php-sodium composer sqlite
+  # Enable only the extensions this PHP does not already have, so nothing warns about double loading.
+  local ini="/etc/php/conf.d/kids-workbench.ini" lines="; Kids Workbench: extensions Laravel needs"$'\n' ext loaded
+  loaded="$(php -m | tr 'A-Z' 'a-z')"
+  for ext in bcmath curl fileinfo intl mbstring openssl pdo_sqlite sqlite3 pdo_pgsql pgsql sodium gd iconv; do
+    grep -qx "$ext" <<<"$loaded" || lines+="extension=$ext"$'\n'
+  done
+  printf '%s' "$lines" | sudo tee "$ini" >/dev/null
+  say "Wrote $ini"
+  render_php_fpm
+  systemctl --user daemon-reload
+  systemctl --user enable --now "$UNIT"
+  say "PHP-FPM is running. Next: kids-workbench up"
+}
+
+cmd_up() {
+  have docker || die "docker is not installed"
+  sync_files
+  if have php-fpm; then
+    render_php_fpm
+    systemctl --user daemon-reload
+    systemctl --user enable --now "$UNIT" >/dev/null 2>&1 || true
+    systemctl --user restart "$UNIT" 2>/dev/null || true
+  else
+    say "Note: php-fpm is not installed, so PHP projects will not run yet (kids-workbench install-host)."
+  fi
+  compose up -d
+  say ""
+  say "Projects:  http://$DOMAIN/    (each at http://<name>.$DOMAIN/)"
+  say "Database:  http://db.$DOMAIN/    Mail: http://mail.$DOMAIN/"
+  say "Postgres:  127.0.0.1:$PG_PORT"
+}
+
+cmd_down() { [ -f "$SVC/.env" ] || die "not set up (kids-workbench up)"; compose down; }
+cmd_logs() { compose logs --tail 50 "$@"; }
+cmd_reload() {
+  docker exec kids-workbench-caddy caddy reload --config /etc/caddy/Caddyfile
+}
+
+cmd_status() {
+  docker ps --filter "name=kids-workbench-" --format 'table {{.Names}}\t{{.Status}}\t{{.Ports}}'
+  have systemctl && systemctl --user is-active "$UNIT" 2>/dev/null | sed 's/^/php-fpm: /' || true
+}
+
+# ---- per-project Postgres ----
+db_names() {  # <project-name> -> sets DBNAME
+  local n="${1:?project name}"
+  DBNAME="kids_workbench_$(tr 'A-Z-' 'a-z_' <<<"$n" | tr -cd 'a-z0-9_')"
+  [ ${#DBNAME} -le 63 ] || die "name too long for a database name"
+}
+pg() { docker exec -i "$PG" psql -U kids_workbench -v ON_ERROR_STOP=1 -tA "$@"; }
+db_env() {
+  local pw="$1"
+  cat <<EOF
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=$PG_PORT
+DB_DATABASE=$DBNAME
+DB_USERNAME=$DBNAME
+DB_PASSWORD=$pw
+MAIL_MAILER=smtp
+MAIL_HOST=127.0.0.1
+MAIL_PORT=1025
+EOF
+}
+cmd_db() {
+  local sub="${1:-}"; shift || true
+  case "$sub" in
+    create)
+      db_names "${1:-}"
+      local f="$SVC/db/$DBNAME.env" pw
+      if [ -f "$f" ]; then cat "$f"; return; fi
+      pw="$(head -c 18 /dev/urandom | base64 | tr -dc 'A-Za-z0-9' | head -c 20)"
+      pg -c "CREATE ROLE \"$DBNAME\" LOGIN PASSWORD '$pw'" >/dev/null
+      pg -c "CREATE DATABASE \"$DBNAME\" OWNER \"$DBNAME\"" >/dev/null
+      (umask 077; db_env "$pw" > "$f")
+      cat "$f" ;;
+    drop)
+      db_names "${1:-}"
+      pg -c "DROP DATABASE IF EXISTS \"$DBNAME\"" >/dev/null
+      pg -c "DROP ROLE IF EXISTS \"$DBNAME\"" >/dev/null
+      rm -f "$SVC/db/$DBNAME.env"; say "Dropped $DBNAME" ;;
+    list) pg -c "SELECT datname FROM pg_database WHERE datname LIKE 'kids\\_workbench\\_%' ORDER BY 1" ;;
+    *) die "usage: kids-workbench db create|drop|list [project-name]" ;;
+  esac
+}
+
+cmd_open() {
+  local n="${1:-}"
+  xdg-open "http://${n:+$n.}$DOMAIN/" >/dev/null 2>&1 &
+}
+
+cmd_doctor() {
+  local bad=0
+  chk() { if "${@:2}" >/dev/null 2>&1; then printf '  ✅ %s\n' "$1"; else printf '  ❌ %s\n' "$1"; bad=1; fi; }
+  chk "docker"              docker info
+  chk "php"                 have php
+  chk "php-fpm"             have php-fpm
+  chk "composer"            have composer
+  chk "node"                have node
+  chk "sqlite3"             have sqlite3
+  chk "php-fpm service"     systemctl --user is-active "$UNIT"
+  chk "caddy container"     docker exec kids-workbench-caddy true
+  chk "postgres container"  docker exec "$PG" pg_isready -U kids_workbench
+  chk "landing page"        curl -fsS -H "Host: $DOMAIN" http://127.0.0.1/
+  [ $bad -eq 0 ] && say "All good." || say "Some checks failed. Try: kids-workbench install-host (PHP) and kids-workbench up (services)."
+  return $bad
+}
+
+case "${1:-help}" in
+  install-host) cmd_install_host ;;
+  up)     cmd_up ;;
+  down)   cmd_down ;;
+  status) cmd_status ;;
+  reload) cmd_reload ;;
+  logs)   shift; cmd_logs "$@" ;;
+  db)     shift; cmd_db "$@" ;;
+  open)   shift; cmd_open "${1:-}" ;;
+  doctor) cmd_doctor ;;
+  *) cat <<EOF
+kids-workbench <command>
+  install-host   install PHP, php-fpm, Composer (sudo) and start php-fpm
+  up | down      start or stop Caddy, Postgres, Mailpit, Adminer
+  status | logs  see what is running
+  reload         reload the Caddy config after editing caddy.d snippets
+  db create|drop|list <project>   per-project Postgres database
+  open [project] open the landing page or a project in the browser
+  doctor         check everything
+EOF
+  ;;
+esac

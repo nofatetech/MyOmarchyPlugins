@@ -20,6 +20,7 @@ Started as an experiment for our own kids.
 | [docs/principles.md](docs/principles.md) | Design principles and trust model |
 | [docs/features.md](docs/features.md) | Every feature idea, grouped by area |
 | [docs/agents-and-standards.md](docs/agents-and-standards.md) | Agent-driven templates, standards sync, kid profiles |
+| [docs/services.md](docs/services.md) | Shared Caddy, php-fpm, Postgres, Mailpit, Adminer and the `kids-workbench` CLI |
 | [docs/hardware.md](docs/hardware.md) | Devices, physical computing, workshop setup |
 | [docs/mentors.md](docs/mentors.md) | Mentor model |
 | [docs/real-world.md](docs/real-world.md) | Portfolio, skills, internships, pedagogy |
@@ -58,4 +59,5 @@ Sidebar v0.1: name prompt (plus optional idea), My stuff with update badges, fou
 Standards v0.1.0 (naming, architecture, conventions, guardrails, testing).
 
 **Not yet tested:** `scripts/bootstrap.sh` in the Web app seed (this machine has no PHP/Composer yet), and the guard tests, which need a bootstrapped Laravel app.
-Next: Caddy + shared services setup, `kids-workbench doctor` install help, step mode, link saver.
+Shared services (Caddy, Postgres, Mailpit, Adminer) are in `services/` and run with `kids-workbench up`; PHP still needs `kids-workbench install-host`.
+Next: step mode, link saver, project tiles that show service status.

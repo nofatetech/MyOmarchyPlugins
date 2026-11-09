@@ -80,6 +80,13 @@ Item {
     openProc.running = true
   }
 
+  // Open <name>.kids-workbench.localhost (served by the shared Caddy).
+  function openSite(path) {
+    var name = path.split("/").pop()
+    openProc.command = ["xdg-open", "http://" + name + ".kids-workbench.localhost/"]
+    openProc.running = true
+  }
+
   function openFolder(path) {
     openProc.command = ["xdg-open", path]
     openProc.running = true

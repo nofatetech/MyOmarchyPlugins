@@ -15,4 +15,7 @@ if ! jq -e --arg id "$id" '(.plugins // []) | any(.id == $id)' "$cfg" >/dev/null
   jq --arg id "$id" '.plugins = ((.plugins // []) + [{id: $id}])' "$cfg" > "$cfg.tmp" && mv "$cfg.tmp" "$cfg"
   echo "Enabled $id in $cfg (backup: $cfg.pre-kids-workbench)"
 fi
+mkdir -p "$HOME/.local/bin"
+ln -sfn "$here/bin/kids-workbench" "$HOME/.local/bin/kids-workbench"
+
 echo "Installed. Toggle with: omarchy-shell myomarchy.kids-workbench toggle"

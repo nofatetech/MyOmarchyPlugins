@@ -1,0 +1,35 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kids Workbench</title>
+<style>
+  :root { --bg:#1a1b26; --panel:#24283b; --text:#c0caf5; --muted:#7982a9; --accent:#7aa2f7; }
+  @media (prefers-color-scheme: light) { :root { --bg:#f4f1ea; --panel:#fff; --text:#2b2d3a; --muted:#77737a; } }
+  body { margin:0; background:var(--bg); color:var(--text); font-family: system-ui, sans-serif; }
+  main { max-width: 56rem; margin: 0 auto; padding: 2rem 1.2rem 4rem; }
+  h1 { margin: 0 0 .3rem; } p { color: var(--muted); }
+  .grid { display:grid; grid-template-columns: repeat(auto-fill, minmax(14rem,1fr)); gap:1rem; margin-top:1.5rem; }
+  a.card { display:block; background:var(--panel); color:var(--text); text-decoration:none; padding:1.1rem; border-radius:16px; border:2px solid transparent; }
+  a.card:hover { border-color: var(--accent); }
+  .name { font-weight:700; font-size:1.1rem; } .host { color:var(--muted); font-size:.85rem; margin-top:.2rem; word-break:break-all; }
+  .tools { margin-top:2rem; } .tools a { color: var(--accent); margin-right:1.2rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>🛠️ Kids Workbench</h1>
+  <p>Your projects, each on its own address.</p>
+  <div class="grid">
+    {{- range .Items}}{{if and .IsDir (not (hasPrefix "." .Name))}}{{$n := trimSuffix "/" .Name}}
+    <a class="card" href="http://{{$n}}.{{$.Host}}/">
+      <div class="name">{{$n}}</div>
+      <div class="host">{{$n}}.{{$.Host}}</div>
+    </a>
+    {{- end}}{{end}}
+  </div>
+  <p class="tools"><a href="http://db.{{.Host}}/">🗄️ Database viewer</a><a href="http://mail.{{.Host}}/">✉️ Mail catcher</a></p>
+</main>
+</body>
+</html>

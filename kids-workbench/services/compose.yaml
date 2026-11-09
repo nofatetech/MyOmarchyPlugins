@@ -1,0 +1,69 @@
+# Kids Workbench shared services. Run through `kids-workbench up` (it renders .env next to this file).
+# Everything listens on 127.0.0.1 only.
+name: kids-workbench
+
+services:
+  caddy:
+    image: caddy:2-alpine
+    container_name: kids-workbench-caddy
+    restart: unless-stopped
+    network_mode: host   # lets it bind port 80 on 127.0.0.1 and reach php-fpm and the other services
+    environment:
+      KIDS_WORKBENCH_DOMAIN: ${KIDS_WORKBENCH_DOMAIN}
+      KIDS_WORKBENCH_PROJECTS: ${KIDS_WORKBENCH_PROJECTS}
+      KIDS_WORKBENCH_RUN: ${KIDS_WORKBENCH_RUN}
+      KIDS_WORKBENCH_LABEL: ${KIDS_WORKBENCH_LABEL}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./browse.html:/etc/caddy/browse.html:ro
+      - ${KIDS_WORKBENCH_CONFIG}/caddy.d:/etc/caddy/sites.d:ro
+      - ${KIDS_WORKBENCH_PROJECTS}:${KIDS_WORKBENCH_PROJECTS}:ro   # same path as on the host, so php-fpm sees matching file paths
+      - ${KIDS_WORKBENCH_RUN}:${KIDS_WORKBENCH_RUN}                # holds the php-fpm socket
+      - caddy_data:/data
+
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: kids-workbench-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: kids_workbench
+      POSTGRES_PASSWORD: ${KIDS_WORKBENCH_PG_PASSWORD}
+      POSTGRES_DB: kids_workbench
+    ports:
+      - "127.0.0.1:${KIDS_WORKBENCH_PG_PORT}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U kids_workbench"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    container_name: kids-workbench-mailpit
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:1025:1025"   # SMTP (apps send mail here)
+      - "127.0.0.1:8025:8025"   # web UI, at mail.<domain>
+
+  adminer:
+    image: adminer:latest
+    container_name: kids-workbench-adminer
+    restart: unless-stopped
+    user: "${KIDS_WORKBENCH_UID}:${KIDS_WORKBENCH_GID}"   # so it can open the kids' SQLite files
+    environment:
+      ADMINER_DEFAULT_SERVER: postgres
+      ADMINER_DESIGN: pepa-linha-dark
+    ports:
+      - "127.0.0.1:8088:8080"   # at db.<domain>
+    volumes:
+      - ${KIDS_WORKBENCH_PROJECTS}:${KIDS_WORKBENCH_PROJECTS}
+      - ./adminer/plugins-enabled:/var/www/html/plugins-enabled:ro
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  caddy_data:
+  postgres_data:

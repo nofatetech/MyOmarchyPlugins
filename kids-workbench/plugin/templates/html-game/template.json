@@ -1,4 +1,5 @@
 {
+  "web": true,
   "name": "HTML game",
   "icon": "🕹️",
   "description": "A tiny game in the browser. Edit game.js, then refresh the page (F5).",

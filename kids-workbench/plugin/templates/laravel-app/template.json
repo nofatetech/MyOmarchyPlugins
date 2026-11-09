@@ -1,4 +1,5 @@
 {
+  "web": true,
   "name": "Web app",
   "icon": "🌐",
   "description": "A real web app with Laravel and Vue. An agent helps you build it, step by step.",

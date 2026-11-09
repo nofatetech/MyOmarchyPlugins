@@ -1,0 +1,46 @@
+# Kids Workbench routing. Plain HTTP on 127.0.0.1 only.
+# Browsers treat *.localhost as a secure context, so no certificates are needed.
+{
+	auto_https off
+	default_bind 127.0.0.1
+}
+
+# Per-project overrides (a proxy to a dev server, a custom root, ...). An exact host
+# beats the wildcard below. Files: ~/.config/kids-workbench/caddy.d/<name>.caddy
+import /etc/caddy/sites.d/*.caddy
+
+# Landing page: a live list of project folders, each linking to its own host.
+http://{$KIDS_WORKBENCH_DOMAIN} {
+	root * {$KIDS_WORKBENCH_PROJECTS}
+	file_server {
+		browse /etc/caddy/browse.html
+	}
+}
+
+# Tools
+http://db.{$KIDS_WORKBENCH_DOMAIN} {
+	reverse_proxy 127.0.0.1:8088
+}
+http://mail.{$KIDS_WORKBENCH_DOMAIN} {
+	reverse_proxy 127.0.0.1:8025
+}
+
+# Every project: <name>.<domain> serves ~/Projects/<name>.
+# A Laravel app (public/index.php) goes through php-fpm; anything else is served as static files.
+http://*.{$KIDS_WORKBENCH_DOMAIN} {
+	@laravel file {
+		root {$KIDS_WORKBENCH_PROJECTS}/{labels.{$KIDS_WORKBENCH_LABEL}}/public
+		try_files /index.php
+	}
+	handle @laravel {
+		root * {$KIDS_WORKBENCH_PROJECTS}/{labels.{$KIDS_WORKBENCH_LABEL}}/public
+		encode zstd gzip
+		php_fastcgi unix/{$KIDS_WORKBENCH_RUN}/php-fpm.sock
+		file_server
+	}
+	handle {
+		root * {$KIDS_WORKBENCH_PROJECTS}/{labels.{$KIDS_WORKBENCH_LABEL}}
+		encode zstd gzip
+		file_server
+	}
+}
