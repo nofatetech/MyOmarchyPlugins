@@ -19,6 +19,7 @@ Started as an experiment for our own kids.
 | [docs/vision.md](docs/vision.md) | Why, who, and the shape of the thing |
 | [docs/principles.md](docs/principles.md) | Design principles and trust model |
 | [docs/features.md](docs/features.md) | Every feature idea, grouped by area |
+| [docs/agents-and-standards.md](docs/agents-and-standards.md) | Agent-driven templates, standards sync, kid profiles |
 | [docs/hardware.md](docs/hardware.md) | Devices, physical computing, workshop setup |
 | [docs/mentors.md](docs/mentors.md) | Mentor model |
 | [docs/real-world.md](docs/real-world.md) | Portfolio, skills, internships, pedagogy |
