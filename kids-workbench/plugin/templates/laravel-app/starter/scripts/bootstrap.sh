@@ -12,7 +12,7 @@ tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
 echo "▶ Creating the Laravel app (this takes a few minutes)"
-composer create-project laravel/vue-starter-kit "$tmp/app" --no-interaction
+composer create-project laravel/vue-starter-kit "$tmp/app" --no-interaction --no-ansi
 
 echo "▶ Moving it into this folder (our own files are kept)"
 rm -rf "$tmp/app/.git"
@@ -23,9 +23,16 @@ echo "▶ Setting up"
 php artisan key:generate --force
 mkdir -p database && touch database/database.sqlite
 php artisan migrate --force
-composer show pestphp/pest >/dev/null 2>&1 || composer require --dev pestphp/pest pestphp/pest-plugin-laravel --no-interaction
+# The starter kit pins PHPUnit, which blocks current Pest: swap PHPUnit for Pest (Pest brings its own).
+if ! composer show pestphp/pest >/dev/null 2>&1; then
+  composer remove --dev phpunit/phpunit --no-update --no-interaction --no-ansi
+  composer require --dev pestphp/pest pestphp/pest-plugin-laravel -W --no-interaction --no-ansi
+fi
 npm install
 npm run build
+
+echo "▶ Formatting the starter code once (so the style check starts clean)"
+./vendor/bin/pint >/dev/null
 
 echo "▶ Checking"
 .kids-workbench/scripts/test.sh || true

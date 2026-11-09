@@ -51,7 +51,7 @@ render_php_fpm() {
 ; Kids Workbench PHP-FPM (runs as you, listens on a socket only Caddy reaches)
 [global]
 pid = $RUN/php-fpm.pid
-error_log = /dev/stderr
+error_log = $RUN/php-fpm.log
 daemonize = no
 
 [www]
@@ -100,6 +100,7 @@ cmd_up() {
   if have php-fpm; then
     render_php_fpm
     systemctl --user daemon-reload
+    systemctl --user reset-failed "$UNIT" 2>/dev/null || true
     systemctl --user enable --now "$UNIT" >/dev/null 2>&1 || true
     systemctl --user restart "$UNIT" 2>/dev/null || true
   else

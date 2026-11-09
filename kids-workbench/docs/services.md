@@ -48,7 +48,9 @@ http://space-dodger.kids-workbench.localhost {
 ```
 
 ## Tested / not yet
-- Tested: Caddy routing (landing page, static project, unknown project 404, db and mail hosts), the PHP route through a
-  throwaway php-fpm container on a unix socket with matching paths, Postgres create/use/drop, Adminer SQLite login, binding to 127.0.0.1.
-- Not tested: `install-host` (needs sudo) and the native php-fpm systemd unit, because PHP is not installed on this machine yet.
+- Tested: Caddy routing (landing page, static project, unknown project 404, db and mail hosts), the PHP route through php-fpm on a
+  unix socket with matching paths (first with a throwaway container, then the native user service with a real Laravel app),
+  Postgres create/use/drop and Laravel migrations on it, Mail into Mailpit, Adminer SQLite login, binding to 127.0.0.1.
+- Fixed on the way: php-fpm cannot log to `/dev/stderr` under systemd (it logs to `$XDG_RUNTIME_DIR/kids-workbench/php-fpm.log`).
+- `install-host` asks for sudo, so run it in a real terminal: a `!` prompt has no TTY for the password.
 - Datasette (a friendlier "explore your data" view for SQLite) is a possible later addition.

@@ -58,6 +58,9 @@ The HTML in `prototype/` is the original design sketch, not the real thing.
 Sidebar v0.1: name prompt (plus optional idea), My stuff with update badges, four templates (HTML game, Godot game, Drawing, Web app).
 Standards v0.1.0 (naming, architecture, conventions, guardrails, testing).
 
-**Not yet tested:** `scripts/bootstrap.sh` in the Web app seed (this machine has no PHP/Composer yet), and the guard tests, which need a bootstrapped Laravel app.
-Shared services (Caddy, Postgres, Mailpit, Adminer) are in `services/` and run with `kids-workbench up`; PHP still needs `kids-workbench install-host`.
+**Tested end to end (2026-11-08, PHP 8.5, laravel/vue-starter-kit v1.0.2, Pest 4.7):** creating a Web app project, `scripts/bootstrap.sh`,
+`.kids-workbench/scripts/test.sh` (guards, Pint, 27 app tests all green), the site at `<name>.kids-workbench.localhost` through Caddy and php-fpm,
+migrations on the shared Postgres, and mail into Mailpit. Not yet tried with a real agent session.
+
+Shared services (Caddy, Postgres, Mailpit, Adminer) are in `services/` and run with `kids-workbench up`; PHP and Composer come from `kids-workbench install-host`.
 Next: step mode, link saver, project tiles that show service status.
