@@ -25,6 +25,7 @@ Started as an experiment for our own kids.
 | [docs/safety.md](docs/safety.md) | Safety layer and guardrails |
 | [docs/omarchy-integration.md](docs/omarchy-integration.md) | How it could be built on Omarchy |
 | [docs/roadmap.md](docs/roadmap.md) | Suggested v1 and later phases |
+| [standards/naming.md](standards/naming.md) | Naming rules for hosts, folders, DBs, env vars, code |
 | [docs/open-questions.md](docs/open-questions.md) | What we haven't decided |
 
 ## Try it (Omarchy shell plugin)
